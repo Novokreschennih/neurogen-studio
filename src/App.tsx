@@ -40,14 +40,10 @@ function App() {
           expiresAt: Date.now() + 24 * 60 * 60 * 1000,
         });
         setView("app");
-
-        const landingContainer = document.getElementById("landing-container");
-        const rootContainer = document.getElementById("root");
-        if (landingContainer) landingContainer.style.display = "none";
-        if (rootContainer) rootContainer.style.display = "block";
       } else if (authData && authData.expiresAt > Date.now()) {
         setView("app");
       } else {
+        // Остаёмся на лендинге (он в index.html)
         setView("landing");
       }
       setIsCheckingYdbAuth(false);
