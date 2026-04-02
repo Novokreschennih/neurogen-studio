@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useGlobalSettings } from "./hooks/useGlobalSettings";
-import { useTheme } from "./hooks/useTheme";
-import { useLocalStorage } from "./hooks/useLocalStorage";
 import { Navigation } from "./components/Navigation";
 import { Dashboard } from "./components/Dashboard";
 import { GlobalSettingsModal } from "./components/GlobalSettingsModal";
@@ -16,14 +14,17 @@ type Module = "dashboard" | "landing" | "redesign" | "deploy";
 type View = "landing" | "pin" | "app";
 
 function App() {
-  const [authData, setAuthData] = useLocalStorage<any>(AUTH_STORAGE_KEY, null);
-  const { theme, toggleTheme } = useTheme();
-  const { settings, loadSettings, hasApiKey } = useGlobalSettings();
+  const [authData, setAuthData] = React.useLocalStorage<any>(
+    AUTH_STORAGE_KEY,
+    null,
+  );
+  const { settings, loadSettings } = useGlobalSettings();
 
   const [currentModule, setCurrentModule] = useState<Module>("dashboard");
   const [view, setView] = useState<View>("landing");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCheckingYdbAuth, setIsCheckingYdbAuth] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
 
   // Проверяем YDB auth при загрузке
   useEffect(() => {
@@ -66,9 +67,13 @@ function App() {
     }
   }, [authData, isCheckingYdbAuth]);
 
-  // Применяем тему из глобальных настроек
+  // Применяем тему
   useEffect(() => {
-    if (settings.darkMode) {
+    const isDark =
+      settings.darkMode ||
+      localStorage.getItem("neurogen-dark-mode") === "true";
+    setDarkMode(isDark);
+    if (isDark) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
@@ -76,11 +81,15 @@ function App() {
   }, [settings.darkMode]);
 
   const handleToggleTheme = () => {
-    const newMode = !settings.darkMode;
-    document.documentElement.classList.toggle("dark", newMode);
-    localStorage.setItem("neurogen-dark-mode", String(newMode));
-    // Force re-render by updating settings
-    loadSettings();
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+    if (newMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("neurogen-dark-mode", "true");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("neurogen-dark-mode", "false");
+    }
   };
 
   const handlePinSuccess = (data: any) => {
@@ -116,16 +125,14 @@ function App() {
   }
 
   return (
-    <div
-      className={`min-h-screen ${theme === "dark" || settings.darkMode ? "dark" : ""}`}
-    >
+    <div className={`min-h-screen ${darkMode ? "dark" : ""}`}>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 transition-colors duration-300">
         <Navigation
           currentModule={currentModule}
           onModuleChange={setCurrentModule}
           onSettingsOpen={() => setIsSettingsOpen(true)}
           onLogout={handleLogout}
-          theme={settings.darkMode ? "dark" : "light"}
+          theme={darkMode ? "dark" : "light"}
           onToggleTheme={handleToggleTheme}
         />
 
