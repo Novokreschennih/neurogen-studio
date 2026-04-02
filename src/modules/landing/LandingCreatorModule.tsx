@@ -9,26 +9,31 @@ import {
   ImageInputType,
   ImageRole,
   AIModel,
+  ApiProvider,
+  HistoryItem,
 } from "./types";
 import {
   DESIGN_STYLE_GROUPS,
-  LEAD_MAGNET_FORMATS,
   LANDING_BLOCKS_OPTIONS,
   LEAD_MAGNET_BLOCKS_OPTIONS,
-  LEAD_MAGNET_TYPES,
-  CONTENT_LENGTH_OPTIONS,
-  WRITING_TONE_OPTIONS,
   TARGET_AUDIENCE_OPTIONS,
   IMAGE_ROLE_OPTIONS,
 } from "./constants";
 import { generateTextContent, generateHtmlLayout } from "./services/aiService";
-import { addHistoryItem } from "./services/historyService";
-import {
-  saveActiveProvider,
-  getActiveProvider,
-  hasApiKey,
-} from "./services/apiKeyService";
+import { addHistoryItem, getHistory } from "./services/historyService";
 import StepIndicator from "./components/StepIndicator";
+import HistoryModal from "./components/HistoryModal";
+import LegalModal from "./components/LegalModal";
+import { SettingsModal } from "./components/SettingsModal";
+import {
+  HistoryIcon,
+  SettingsIcon,
+  SunIcon,
+  MoonIcon,
+  DownloadIcon,
+  BotIcon,
+  LoadingSpinner,
+} from "./components/icons";
 
 const DEFAULT_FORM_DATA: LandingFormData = {
   goal: null,
@@ -60,6 +65,12 @@ export function LandingCreatorModule() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  // Modals
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLegalOpen, setIsLegalOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   const isLanding = formData.goal === Goal.LANDING_PAGE;
   const blocksOptions = isLanding
@@ -123,6 +134,13 @@ export function LandingCreatorModule() {
     URL.revokeObjectURL(url);
   };
 
+  const handleRestore = (item: HistoryItem) => {
+    setFormData(item.formData);
+    setGeneratedHtml(item.generatedContent);
+    setIsHistoryOpen(false);
+    setStep(4);
+  };
+
   const addImage = () => {
     const newImage: CustomImage = {
       url: "",
@@ -167,7 +185,57 @@ export function LandingCreatorModule() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className={`max-w-7xl mx-auto ${darkMode ? "dark" : ""}`}>
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
+            <BotIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+              Конструктор лендингов
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              AI-powered landing page builder
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsHistoryOpen(true)}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title="История"
+          >
+            <HistoryIcon className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+          </button>
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title="Настройки"
+          >
+            <SettingsIcon className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+          </button>
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title="Тема"
+          >
+            {darkMode ? (
+              <SunIcon className="w-5 h-5 text-yellow-500" />
+            ) : (
+              <MoonIcon className="w-5 h-5 text-slate-600" />
+            )}
+          </button>
+          <button
+            onClick={() => setIsLegalOpen(true)}
+            className="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+          >
+            Правовая информация
+          </button>
+        </div>
+      </div>
+
       <StepIndicator currentStep={step} totalSteps={4} />
 
       {/* Step 1: Goal Selection */}
@@ -176,7 +244,7 @@ export function LandingCreatorModule() {
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-8 text-center">
             Что будем создавать?
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <button
               onClick={() => {
                 setFormData({ ...formData, goal: Goal.LANDING_PAGE });
@@ -184,8 +252,8 @@ export function LandingCreatorModule() {
               }}
               className={`group p-8 rounded-3xl border-2 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl text-left ${
                 formData.goal === Goal.LANDING_PAGE
-                  ? "border-indigo-500 ring-4 ring-indigo-100 dark:ring-indigo-900/30"
-                  : "border-slate-200 dark:border-slate-700 hover:border-indigo-300"
+                  ? "border-cyan-500 ring-4 ring-cyan-100 dark:ring-cyan-900/30"
+                  : "border-slate-200 dark:border-slate-700 hover:border-cyan-300"
               } bg-white dark:bg-slate-800`}
             >
               <div className="text-6xl mb-6">🌐</div>
@@ -204,8 +272,8 @@ export function LandingCreatorModule() {
               }}
               className={`group p-8 rounded-3xl border-2 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl text-left ${
                 formData.goal === Goal.LEAD_MAGNET
-                  ? "border-indigo-500 ring-4 ring-indigo-100 dark:ring-indigo-900/30"
-                  : "border-slate-200 dark:border-slate-700 hover:border-indigo-300"
+                  ? "border-purple-500 ring-4 ring-purple-100 dark:ring-purple-900/30"
+                  : "border-slate-200 dark:border-slate-700 hover:border-purple-300"
               } bg-white dark:bg-slate-800`}
             >
               <div className="text-6xl mb-6">🧲</div>
@@ -255,18 +323,6 @@ export function LandingCreatorModule() {
                 </option>
               ))}
             </select>
-            {!TARGET_AUDIENCE_OPTIONS.includes(formData.targetAudience) &&
-              formData.targetAudience && (
-                <input
-                  type="text"
-                  value={formData.targetAudience}
-                  onChange={(e) =>
-                    setFormData({ ...formData, targetAudience: e.target.value })
-                  }
-                  placeholder="Введите описание аудитории..."
-                  className="w-full mt-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-indigo-300 outline-none text-slate-900 dark:text-white"
-                />
-              )}
           </div>
 
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border border-slate-200 dark:border-slate-700">
@@ -277,9 +333,7 @@ export function LandingCreatorModule() {
               {blocksOptions.map((block) => (
                 <div
                   key={block.id}
-                  onClick={() =>
-                    !block.required && toggleBlock(String(block.id))
-                  }
+                  onClick={() => !block.required && toggleBlock(block.id)}
                   className={`flex items-center p-3 rounded-xl cursor-pointer transition-all border select-none ${
                     currentBlocks.includes(block.id as any)
                       ? "bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700"
@@ -347,10 +401,10 @@ export function LandingCreatorModule() {
             <label className="block text-lg font-bold text-slate-900 dark:text-white mb-4">
               Стиль дизайна
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
               {DESIGN_STYLE_GROUPS.map((group, idx) => (
                 <div key={idx}>
-                  <h4 className="font-semibold text-slate-700 dark:text-slate-300 mb-3 text-sm">
+                  <h4 className="font-semibold text-slate-700 dark:text-slate-300 mb-3 text-sm sticky top-0 bg-white dark:bg-slate-800 py-2">
                     {group.label}
                   </h4>
                   <div className="space-y-2">
@@ -380,125 +434,6 @@ export function LandingCreatorModule() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border border-slate-200 dark:border-slate-700">
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <label className="block text-lg font-bold text-slate-900 dark:text-white">
-                  Изображения
-                </label>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Добавьте логотип, фото автора или продукта
-                </p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.includeImages}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      includeImages: e.target.checked,
-                    })
-                  }
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
-              </label>
-            </div>
-
-            {formData.includeImages && (
-              <div className="space-y-4">
-                {formData.customImages.map((img, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-col md:flex-row gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
-                  >
-                    <div className="flex-1 space-y-2">
-                      <select
-                        value={img.role}
-                        onChange={(e) =>
-                          updateImage(index, "role", e.target.value)
-                        }
-                        className="w-full text-sm p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none"
-                      >
-                        {IMAGE_ROLE_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        value={img.type}
-                        onChange={(e) =>
-                          updateImage(
-                            index,
-                            "type",
-                            e.target.value as ImageInputType,
-                          )
-                        }
-                        className="w-full text-sm p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none"
-                      >
-                        <option value={ImageInputType.URL}>
-                          🔗 Ссылка URL
-                        </option>
-                        <option value={ImageInputType.FILE}>
-                          📁 Загрузить файл
-                        </option>
-                        <option value={ImageInputType.PROMPT}>
-                          🎨 AI Генерация
-                        </option>
-                      </select>
-                    </div>
-                    <div className="flex-[2]">
-                      {img.type === ImageInputType.URL && (
-                        <input
-                          type="text"
-                          value={img.url}
-                          onChange={(e) =>
-                            updateImage(index, "url", e.target.value)
-                          }
-                          placeholder="https://example.com/image.png"
-                          className="w-full p-2 text-sm rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none"
-                        />
-                      )}
-                      {img.type === ImageInputType.PROMPT && (
-                        <input
-                          type="text"
-                          value={img.prompt || ""}
-                          onChange={(e) =>
-                            updateImage(index, "prompt", e.target.value)
-                          }
-                          placeholder="Опишите, что нужно сгенерировать..."
-                          className="w-full p-2 text-sm rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none"
-                        />
-                      )}
-                      {img.type === ImageInputType.FILE && (
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleFileUpload(e, index)}
-                          className="w-full text-sm"
-                        />
-                      )}
-                    </div>
-                    <button
-                      onClick={() => removeImage(index)}
-                      className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                ))}
-                <button
-                  onClick={addImage}
-                  className="w-full py-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:border-indigo-400 hover:text-indigo-500 transition-colors font-medium"
-                >
-                  + Добавить изображение
-                </button>
-              </div>
-            )}
-          </div>
-
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-red-600 dark:text-red-400">
               {error}
@@ -519,11 +454,14 @@ export function LandingCreatorModule() {
             >
               {isLoading ? (
                 <>
-                  <span className="animate-spin">⏳</span>
+                  <LoadingSpinner className="w-5 h-5" />
                   <span>{loadingMessage}</span>
                 </>
               ) : (
-                "✨ Сгенерировать"
+                <>
+                  <BotIcon className="w-5 h-5" />
+                  <span>Сгенерировать</span>
+                </>
               )}
             </button>
           </div>
@@ -543,13 +481,14 @@ export function LandingCreatorModule() {
                   onClick={() => setStep(3)}
                   className="px-4 py-2 rounded-lg font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                 >
-                  ← Назад к настройкам
+                  ← Назад
                 </button>
                 <button
                   onClick={handleDownload}
-                  className="px-6 py-2 rounded-lg font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                  className="px-6 py-2 rounded-lg font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex items-center gap-2"
                 >
-                  📥 Скачать HTML
+                  <DownloadIcon className="w-5 h-5" />
+                  Скачать HTML
                 </button>
               </div>
             </div>
@@ -561,6 +500,18 @@ export function LandingCreatorModule() {
           </div>
         </div>
       )}
+
+      {/* Modals */}
+      <HistoryModal
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        onRestore={handleRestore}
+      />
+      <LegalModal isOpen={isLegalOpen} onClose={() => setIsLegalOpen(false)} />
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   );
 }
