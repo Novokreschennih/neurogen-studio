@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useGlobalSettings } from "./hooks/useGlobalSettings";
 import { useTheme } from "./hooks/useTheme";
+import { useLocalStorage } from "./hooks/useLocalStorage";
 import { Navigation } from "./components/Navigation";
 import { Dashboard } from "./components/Dashboard";
 import { GlobalSettingsModal } from "./components/GlobalSettingsModal";
@@ -15,10 +16,7 @@ type Module = "dashboard" | "landing" | "redesign" | "deploy";
 type View = "landing" | "pin" | "app";
 
 function App() {
-  const [authData, setAuthData] = React.useLocalStorage<any>(
-    AUTH_STORAGE_KEY,
-    null,
-  );
+  const [authData, setAuthData] = useLocalStorage<any>(AUTH_STORAGE_KEY, null);
   const { theme, toggleTheme } = useTheme();
   const { settings, loadSettings, hasApiKey } = useGlobalSettings();
 
