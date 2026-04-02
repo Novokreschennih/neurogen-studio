@@ -1,0 +1,37 @@
+{
+  "name": "neurogen-studio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "homepage": "https://your-username.github.io/neurogen-studio",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && npx gh-pages -d dist",
+    "deploy:clean": "npx gh-pages-clean",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google/genai": "^1.29.0",
+    "@monaco-editor/react": "^4.7.0",
+    "file-saver": "^2.0.5",
+    "jszip": "^3.10.1",
+    "marked": "^17.0.5",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/file-saver": "^2.0.7",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.4.21",
+    "gh-pages": "^6.3.0",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}
