@@ -75,6 +75,14 @@ function App() {
     }
   }, [settings.darkMode]);
 
+  const handleToggleTheme = () => {
+    const newMode = !settings.darkMode;
+    document.documentElement.classList.toggle("dark", newMode);
+    localStorage.setItem("neurogen-dark-mode", String(newMode));
+    // Force re-render by updating settings
+    loadSettings();
+  };
+
   const handlePinSuccess = (data: any) => {
     setAuthData({
       userId: data.userId,
@@ -118,11 +126,7 @@ function App() {
           onSettingsOpen={() => setIsSettingsOpen(true)}
           onLogout={handleLogout}
           theme={settings.darkMode ? "dark" : "light"}
-          onToggleTheme={() => {
-            const newMode = !settings.darkMode;
-            document.documentElement.classList.toggle("dark", newMode);
-            localStorage.setItem("neurogen-dark-mode", String(newMode));
-          }}
+          onToggleTheme={handleToggleTheme}
         />
 
         <main className="pt-16 pb-8 px-4 md:px-8 max-w-7xl mx-auto">
