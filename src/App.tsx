@@ -111,7 +111,8 @@ function App() {
   };
 
   if (view === "landing") {
-    return <LandingPage onEnter={() => setView("pin")} />;
+    // Лендинг уже показан в index.html, React не рендерим
+    return null;
   }
 
   if (view === "pin") {
@@ -122,7 +123,7 @@ function App() {
 
   return (
     <div className={`min-h-screen ${darkMode ? "dark" : ""}`}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 transition-colors duration-300">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 transition-colors duration-300 text-slate-900 dark:text-white">
         <Navigation
           currentModule={currentModule}
           onModuleChange={setCurrentModule}
